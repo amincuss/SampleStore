@@ -1,87 +1,88 @@
-name: Build & Deploy .NET Core to IIS
+name: Build & Deploy .NET Project to IIS
 
 on:
   push:
     branches:
-      - master   # فقط وقتی برنچ main آپدیت شود اجرا می‌شود
+      - main   # اجرا هنگام پوش روی main
 
 jobs:
   deploy:
-    runs-on: self-hosted   # runner باید ویندوزی باشد
+    runs-on: self-hosted   # ویندوز سرور با Runner شخصی
 
     steps:
-      # 1️⃣ دریافت سورس از GitHub
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # 2️⃣ کپی کد پروژه به مسیر محلی روی سرور
       - name: Copy repository to deploy directory
         shell: pwsh
         run: |
           $src = "${{ github.workspace }}"
           $dst = "C:\deploy\myapp"
-          Write-Host "📦 Copying source code from $src to $dst ..."
-          if (Test-Path $dst) {
-              Remove-Item $dst -Recurse -Force
-          }
+          if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
           Copy-Item -Path "$src" -Destination $dst -Recurse -Force
-          Write-Host "✅ Source copied successfully."
 
-      # 3️⃣ نصب SDK
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'   # نسخه مورد نیاز خودت
+          dotnet-version: '9.0.x'
 
-      # 4️⃣ Restore پکیج‌ها
+      - name: Detect project automatically
+        shell: pwsh
+        run: |
+          cd "C:\deploy\myapp"
+          # جست‌وجوی .csproj عادی (به‌جز تست‌ها)
+          $projects = Get-ChildItem -Path . -Recurse -Filter *.csproj | Where-Object {
+              $_.FullName -notmatch '\\test|\\tests'
+          }
+          if (-not $projects) { throw "❌ هیچ فایل csproj پیدا نشد!" }
+
+          # انتخاب اولین پروژه اجرایی
+          $mainProject = $projects[0].FullName
+          Write-Host "✅ Project detected => $mainProject"
+
+          # ذخیره در فایل برای مراحل بعد
+          Set-Content -Path "C:\deploy\myapp\selected_project.txt" -Value $mainProject
+
       - name: Restore NuGet packages
         shell: pwsh
         run: |
-          cd "C:\deploy\myapp"
-          Write-Host "🔄 Restoring NuGet packages..."
-          dotnet restore
-          if ($LASTEXITCODE -ne 0) { throw "❌ Restore failed." }
+          $proj = Get-Content "C:\deploy\myapp\selected_project.txt"
+          cd (Split-Path $proj)
+          dotnet restore $proj
+          if ($LASTEXITCODE -ne 0) { throw "Restore failed." }
 
-      # 5️⃣ Build پروژه
       - name: Build project
         shell: pwsh
         run: |
-          cd "C:\deploy\myapp"
-          Write-Host "⚙️ Building project..."
-          dotnet build --configuration Release
-          if ($LASTEXITCODE -ne 0) { throw "❌ Build failed." }
+          $proj = Get-Content "C:\deploy\myapp\selected_project.txt"
+          $projDir = Split-Path $proj
+          cd $projDir
+          dotnet build --configuration Release $proj
+          if ($LASTEXITCODE -ne 0) { throw "Build failed." }
 
-      # 6️⃣ Publish خروجی نهایی
       - name: Publish project
         shell: pwsh
         run: |
-          cd "C:\deploy\myapp"
-          Write-Host "🚀 Publishing project..."
-          dotnet publish --configuration Release --output "C:\deploy\myapp\publish"
-          if ($LASTEXITCODE -ne 0) { throw "❌ Publish failed." }
+          $proj = Get-Content "C:\deploy\myapp\selected_project.txt"
+          $projDir = Split-Path $proj
+          $publishOut = "C:\deploy\myapp\publish"
+          cd $projDir
+          dotnet publish --configuration Release --output $publishOut $proj
+          if ($LASTEXITCODE -ne 0) { throw "Publish failed." }
 
-      # 7️⃣ کپی خروجی فایل‌ها داخل مسیر IIS
-      - name: Deploy to IIS site
+      - name: Deploy to IIS
         shell: pwsh
         run: |
           $publishPath = "C:\deploy\myapp\publish"
-          $iisPath = "C:\inetpub\wwwroot"
-          Write-Host "📂 Copying published files to IIS directory..."
-          if (Test-Path $publishPath -and Test-Path $iisPath) {
+          $iisPath     = "C:\inetpub\wwwroot"
+          $publishExists = Test-Path $publishPath
+          $iisExists     = Test-Path $iisPath
+          if ($publishExists -and $iisExists) {
               Copy-Item -Path "$publishPath\*" -Destination $iisPath -Recurse -Force
-              Write-Host "✅ Files copied successfully to IIS."
           } else {
-              Write-Error "❌ Publish or IIS path not found."
-              exit 1
+              throw "Invalid path. Publish or IIS directory not found."
           }
 
-      # 8️⃣ ریستارت IIS
       - name: Restart IIS
         shell: pwsh
-        run: |
-          Write-Host "🔁 Restarting IIS service..."
-          iisreset
-          if ($LASTEXITCODE -ne 0) { throw "❌ IIS restart failed." }
-          Write-Host "✅ IIS restarted successfully."
+        run: iisreset
