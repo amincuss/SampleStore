@@ -3,11 +3,11 @@ name: Build & Deploy .NET Project to IIS
 on:
   push:
     branches:
-      - main   # اجرا هنگام پوش روی main
+      - master
 
 jobs:
   deploy:
-    runs-on: self-hosted   # ویندوز سرور با Runner شخصی
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
@@ -30,20 +30,14 @@ jobs:
         shell: pwsh
         run: |
           cd "C:\deploy\myapp"
-          # جست‌وجوی .csproj عادی (به‌جز تست‌ها)
-          $projects = Get-ChildItem -Path . -Recurse -Filter *.csproj | Where-Object {
-              $_.FullName -notmatch '\\test|\\tests'
-          }
+          $projects = Get-ChildItem -Recurse -Filter *.csproj
           if (-not $projects) { throw "❌ هیچ فایل csproj پیدا نشد!" }
 
-          # انتخاب اولین پروژه اجرایی
           $mainProject = $projects[0].FullName
-          Write-Host "✅ Project detected => $mainProject"
-
-          # ذخیره در فایل برای مراحل بعد
+          Write-Host "✅ Project detected: $mainProject"
           Set-Content -Path "C:\deploy\myapp\selected_project.txt" -Value $mainProject
 
-      - name: Restore NuGet packages
+      - name: Restore packages
         shell: pwsh
         run: |
           $proj = Get-Content "C:\deploy\myapp\selected_project.txt"
@@ -55,8 +49,7 @@ jobs:
         shell: pwsh
         run: |
           $proj = Get-Content "C:\deploy\myapp\selected_project.txt"
-          $projDir = Split-Path $proj
-          cd $projDir
+          cd (Split-Path $proj)
           dotnet build --configuration Release $proj
           if ($LASTEXITCODE -ne 0) { throw "Build failed." }
 
@@ -64,10 +57,9 @@ jobs:
         shell: pwsh
         run: |
           $proj = Get-Content "C:\deploy\myapp\selected_project.txt"
-          $projDir = Split-Path $proj
-          $publishOut = "C:\deploy\myapp\publish"
-          cd $projDir
-          dotnet publish --configuration Release --output $publishOut $proj
+          cd (Split-Path $proj)
+          $publishDir = "C:\deploy\myapp\publish"
+          dotnet publish --configuration Release --output $publishDir $proj
           if ($LASTEXITCODE -ne 0) { throw "Publish failed." }
 
       - name: Deploy to IIS
@@ -77,10 +69,14 @@ jobs:
           $iisPath     = "C:\inetpub\wwwroot"
           $publishExists = Test-Path $publishPath
           $iisExists     = Test-Path $iisPath
+
           if ($publishExists -and $iisExists) {
+              Write-Host "📂 Copying published files to IIS directory..."
               Copy-Item -Path "$publishPath\*" -Destination $iisPath -Recurse -Force
-          } else {
-              throw "Invalid path. Publish or IIS directory not found."
+              Write-Host "✅ Deployment completed."
+          }
+          else {
+              throw "❌ Invalid path. Check publish or IIS directory."
           }
 
       - name: Restart IIS
