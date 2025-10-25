@@ -1,1 +1,24 @@
 
+name: .net cicd
+on:
+  push:
+     branches:
+       - master  
+jobs:
+   deploy:
+      runs-on: self-hosted
+      steps:
+        - name: copy repository
+          uses: actions/checkout@v4
+
+        - name: copy from workspaces
+          shell: pwsh
+          run: |
+            $source = " ${{ github.workspace}} "
+            $dest = "D:\SourceNet"
+            Copy-Item -Path $source -Destination $des -Recurse -Force
+            Write-host " copy ok"
+
+                  
+
+    
