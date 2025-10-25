@@ -32,6 +32,6 @@ jobs:
           shell: pwsh
           run: |
                cd D:\SourceNet\SampleStore
-               dotnet publish .\WebApplication1.csproj --configuration Release --output "c:\inetpub\wwwroot"     
+               dotnet publish .\WebApplication1\WebApplication1.csproj --configuration Release --output "c:\inetpub\wwwroot"     
 
     
