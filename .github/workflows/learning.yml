@@ -15,8 +15,8 @@ jobs:
           shell: pwsh
           run: |
             $source = " ${{ github.workspace}} "
-            $dest = "D:\SourceNet"
-            Copy-Item -Path "$source" -Destination $des -Recurse -Force
+            $dest = " D:\SourceNet "
+            Copy-Item -Path "$source" -Destination $dest -Recurse -Force
             Write-host " copy ok"
 
                   
