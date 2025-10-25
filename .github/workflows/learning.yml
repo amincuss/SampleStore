@@ -28,4 +28,10 @@ jobs:
             cd D:\SourceNet\SampleStore
             dotnet restore  
 
+        - name: build project
+          shell: pwsh
+          run: |
+               cd D:\SourceNet\SampleStore
+               dotnet build --configuration Release      
+
     
