@@ -1,1 +1,22 @@
+name: cicd sample
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    runs-on: selfself-hosted
+    steps:
+       - name: download Repository
+         uses: actions/checkout@v4  
+
+       - name: Copy repository to D   
+         shell: pwsh
+         run: |
+           $source = ${{ github.workspace}}   
+           $des = "D:\SourceNet"  
+           Copy-Item -Path $source -Destination $des --Force
+
+
+   
 
