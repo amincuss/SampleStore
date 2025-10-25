@@ -5,7 +5,7 @@ on:
       - master
 jobs:
   deploy:
-    runs-on: selfself-hosted
+    runs-on: self-hosted
     steps:
        - name: download Repository
          uses: actions/checkout@v4  
