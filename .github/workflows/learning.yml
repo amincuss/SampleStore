@@ -16,7 +16,7 @@ jobs:
           run: |
             $source = " ${{ github.workspace}} "
             $dest = "D:\SourceNet"
-            Copy-Item -Path $source -Destination $des -Recurse -Force
+            Copy-Item -Path "$source" -Destination $des -Recurse -Force
             Write-host " copy ok"
 
                   
