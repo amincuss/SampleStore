@@ -10,7 +10,7 @@ jobs:
        - name: download Repository
          uses: actions/checkout@v4  
 
-       - name: Copy repository to D   
+       - name: Copy repository to D:\SourceNet   
          shell: pwsh
          run: |
            $source = "${{ github.workspace}}"   
