@@ -13,7 +13,7 @@ jobs:
        - name: Copy repository to D   
          shell: pwsh
          run: |
-           $source = ${{ github.workspace}}   
+           $source = " ${{ github.workspace}} "   
            $des = "D:\SourceNet"  
            Copy-Item -Path $source -Destination $des --Force
 
