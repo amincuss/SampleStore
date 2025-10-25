@@ -1,9 +1,8 @@
 
 name: .net cicd
 on:
-  push:
-     branches:
-       - master  
+  workflow_dispatch:
+    
 jobs:
    deploy:
       runs-on: self-hosted
