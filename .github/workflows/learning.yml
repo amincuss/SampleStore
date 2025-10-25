@@ -19,6 +19,13 @@ jobs:
             Copy-Item -Path "$source" -Destination $dest -Recurse -Force
             Write-host " copy ok"
 
-                  
+        - name: install dot net
+          uses: actions/setup-dotnet@v4
+          
+        - name: restore nuget
+          shell: pwsh
+          run: |
+            cd D:\SourceNet
+            dotnet restore  
 
     
