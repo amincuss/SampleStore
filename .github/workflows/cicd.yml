@@ -22,11 +22,11 @@ jobs:
          with: 
             dotnet-version: '9.0.x'
 
-            
+
        - name: restore nuget
          shell: pwsh
          run: |
-           CD D:\SourceNet\SampleStore
+           CD "D:\SourceNet\SampleStore"
            dotnet restore
            Write-Host " restore done"
 
@@ -34,7 +34,7 @@ jobs:
        - name: Build nad publish
          shell: pwsh
          run: |
-             CD D:\SourceNet\SampleStore
+             CD "D:\SourceNet\SampleStore"
              dotnet publish .\WebApplication1\WebApplication1.csproj --configuration Release --output "c:\inetpub\wwwroot"
              Write-Host "publish ok"
 
