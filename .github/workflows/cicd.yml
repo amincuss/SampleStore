@@ -17,6 +17,29 @@ jobs:
            $des = "D:\SourceNet"  
            Copy-Item -Path $source -Destination $des -Force
 
+       - name: install dot net
+         uses: actions/setup-dotnet@v4
+         with: 
+            dotnet-version: '9.0.x'
+
+            
+       - name: restore nuget
+         shell: pwsh
+         run: |
+           CD D:\SourceNet\SampleStore
+           dotnet restore
+           Write-Host " restore done"
+
+
+       - name: Build nad publish
+         shell: pwsh
+         run: |
+             CD D:\SourceNet\SampleStore
+             dotnet publish .\WebApplication1\WebApplication1.csproj --configuration Release --output "c:\inetpub\wwwroot"
+             Write-Host "publish ok"
+
+
+     
 
    
 
