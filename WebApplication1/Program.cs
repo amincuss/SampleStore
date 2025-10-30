@@ -10,7 +10,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
 }
-
+//cm
 app.UseRouting();
 
 app.UseAuthorization();
